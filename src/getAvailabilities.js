@@ -5,10 +5,16 @@ export default async function getAvailabilities(date, numberOfDays = 7) {
   const availabilities = new Map();
   for (let i = 0; i < numberOfDays; ++i) {
     const tmpDate = moment(date).add(i, "days");
-    availabilities.set(tmpDate.format("d"), {
+    const day = tmpDate.format("d");
+    let dayAvailabilities = availabilities.get(day);
+    dayAvailabilities?dayAvailabilities.push({
       date: tmpDate.toDate(),
       slots: []
-    });
+    }):
+    availabilities.set(day, [{
+      date: tmpDate.toDate(),
+      slots: []
+    }]);
   }
 
   const events = await knex
