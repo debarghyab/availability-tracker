@@ -6,7 +6,7 @@
   "scripts": {
     "db:migrate": "knex migrate:latest",
     "db:rollback": "knex migrate:rollback",
-    "test": "yarn db:migrate && jest --watch"
+    "test": "yarn db:migrate && jest --watchAll"
   },
   "dependencies": {
     "knex": "^0.14.6",
