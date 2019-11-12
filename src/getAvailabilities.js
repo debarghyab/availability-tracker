@@ -1,9 +1,9 @@
 import moment from "moment";
 import knex from "knexClient";
 
-export default async function getAvailabilities(date) {
+export default async function getAvailabilities(date, numberOfDays = 7) {
   const availabilities = new Map();
-  for (let i = 0; i < 7; ++i) {
+  for (let i = 0; i < numberOfDays; ++i) {
     const tmpDate = moment(date).add(i, "days");
     availabilities.set(tmpDate.format("d"), {
       date: tmpDate.toDate(),
