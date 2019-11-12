@@ -189,9 +189,11 @@ describe("getAvailabilities", () => {
 
     it("test 3", async () => {
       const availabilities = await getAvailabilities(new Date("2018-07-29"), 20);
-      console.log(availabilities)
       expect(availabilities.length).toBe(20);
-      availabilities.forEach(x => expect(x.slots).toEqual([]));
+      expect(availabilities[18].slots).toEqual([        
+        "11:30",
+        "12:00"
+      ]);
     });
 
     afterEach(async () => {
