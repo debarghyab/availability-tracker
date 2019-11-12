@@ -1,6 +1,13 @@
 import moment from "moment";
 import knex from "knexClient";
 
+Array.prototype.pushIfUnique = function(item) {
+  for(let i=0;i<this.length;i++){
+    if(item === this[i]) return;
+  }
+  this.push(item);
+}
+
 export default async function getAvailabilities(date, numberOfDays = 7) {
   const availabilities = new Map();
   for (let i = 0; i < numberOfDays; ++i) {
@@ -49,30 +56,34 @@ export default async function getAvailabilities(date, numberOfDays = 7) {
 
 function getFlattenedResult(numberOfDays, availabilities, date){
   const result = new Array(numberOfDays);
-  Array.from(availabilities.values()).forEach(day => day.forEach(dayDate => {
-    const index = (moment(dayDate.date).subtract(moment(date))).format("d");
+  Array.from(availabilities.values()).forEach(day => day.forEach(dayDate => {    
+    const index = getIndexFromDates(dayDate.date, date)
     result[index] = dayDate;
   }));
   return result;
 }
 
-
+function getIndexFromDates(d1, d2){
+  var a = moment(d1);
+  var b = moment(d2);
+  return a.diff(b, 'days');
+}
 
 function handleOpenings(event, day, date){
   if(event.weekly_recurring){
-    const usefulDates = day.filter(dayDate => moment(dayDate.date) >= date)
-    usefulDates.forEach(dayDate => dayDate.slots.push(date.format("H:mm")))
+    const usefulDates = day.filter(dayDate => compareDateGreaterOrEqual(dayDate.date, date.toDate()));
+    usefulDates.forEach(dayDate => dayDate.slots.pushIfUnique(date.format("H:mm")))
   } else {
-    const usefulDate = day.filter(dayDate => moment(dayDate.date) === date);
+    const usefulDate = day.filter(dayDate => compareDateEquality(dayDate.date, date.toDate()))[0];
     if(usefulDate){
-      usefulDate.slots.push(date.format("H:mm"))
+      usefulDate.slots.pushIfUnique(date.format("H:mm"))
     }           
   }
 }
 
 function handleAppointments(event, day, date){
   if(event.weekly_recurring){
-    const usefulDates = day.filter(dayDate => compareDateGreater(dayDate.date, date));
+    const usefulDates = day.filter(dayDate => compareDateGreaterOrEqual(dayDate.date, date.toDate()));
     usefulDates.forEach(dayDate => dayDate.slots = dayDate.slots.filter(
       slot => slot.indexOf(date.format("H:mm")) === -1
     ))
@@ -96,11 +107,15 @@ function compareDateEquality(d1, d2) {
   return false;
 }
 
-function compareDateGreater(d1, d2) {
+function compareDateGreaterOrEqual(d1, d2) {
   if(typeof(d1) === typeof(d2)){
-    return d1.getDate() >= d2.getDate() 
-    || d1.getMonth() >= d2.getMonth() 
-    || d1.getYear() >= d2.getYear()
+    if(d1.getYear() > d2.getYear()) return true;
+    else if(d1.getYear() < d2.getYear()) return false;
+
+    if(d1.getMonth() > d2.getMonth()) return true;
+    else if(d1.getMonth() < d2.getMonth()) return false;
+
+    if(d1.getDate() >= d2.getDate()) return true;
   }
   return false;
 }
