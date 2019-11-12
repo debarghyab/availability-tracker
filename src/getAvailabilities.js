@@ -37,17 +37,28 @@ export default async function getAvailabilities(date, numberOfDays = 7) {
     ) {
       const day = availabilities.get(date.format("d"));
       if (event.kind === "opening") {
-        handleOpenings(event, day);
+        handleOpenings(event, day, date);
       } else if (event.kind === "appointment") {
-        handleAppointments(event, day);
+        handleAppointments(event, day, date);
       }
     }
   }
 
-  return Array.from(availabilities.values())
+  return getFlattenedResult(numberOfDays, availabilities, date)
 }
 
-function handleOpenings(event, day){
+function getFlattenedResult(numberOfDays, availabilities, date){
+  const result = new Array(numberOfDays);
+  Array.from(availabilities.values()).forEach(day => day.forEach(dayDate => {
+    const index = (moment(dayDate.date).subtract(moment(date))).format("d");
+    result[index] = dayDate;
+  }));
+  return result;
+}
+
+
+
+function handleOpenings(event, day, date){
   if(event.weekly_recurring){
     const usefulDates = day.filter(dayDate => moment(dayDate.date) >= date)
     usefulDates.forEach(dayDate => dayDate.slots.push(date.format("H:mm")))
@@ -59,7 +70,7 @@ function handleOpenings(event, day){
   }
 }
 
-function handleAppointments(event, day){
+function handleAppointments(event, day, date){
   if(event.weekly_recurring){
     const usefulDates = day.filter(dayDate => compareDateGreater(dayDate.date, date));
     usefulDates.forEach(dayDate => dayDate.slots = dayDate.slots.filter(
