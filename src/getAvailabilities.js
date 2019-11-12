@@ -17,12 +17,17 @@ export default async function getAvailabilities(date, numberOfDays = 7) {
     }]);
   }
 
+  const queryEndDate = moment(date).add(numberOfDays, "days");
   const events = await knex
-    .select("kind", "starts_at", "ends_at", "weekly_recurring")
-    .from("events")
-    .where(function() {
-      this.where("weekly_recurring", true).orWhere("ends_at", ">", +date);
-    });
+  .select("kind", "starts_at", "ends_at", "weekly_recurring")
+  .from("events")
+  .where(function() {
+    this.where("weekly_recurring", true).andWhere("starts_at", "<=", +queryEndDate);
+  })
+  .orWhere(function() {
+    this.where("ends_at", ">=", +date).orWhere("starts_at", "<=", +queryEndDate);
+  })
+  .orderBy('kind', 'desc');
 
   for (const event of events) {
     for (
